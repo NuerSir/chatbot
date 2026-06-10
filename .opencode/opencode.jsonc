@@ -1,0 +1,116 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "mcp": {
+        "hub-dev": {
+            "type": "remote",
+            "url": "{env:MCPHUB_DEV_URL}",
+            "headers": {
+                "Authorization": "Bearer {env:MCPHUB_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            "enabled": true
+        },
+    	"mcp-docs-server": {
+			"type": "local",
+			"command": [
+				"npx",
+        		"-y",
+        		"@assistant-ui/mcp-docs-server"
+      		],
+      		"enabled": true,
+      		"environment": {}
+    	},
+        "codegraph": {
+            "type": "local",
+            "command": [
+                "codegraph",
+                "serve",
+                "--mcp"
+            ],
+            "enabled": true
+        }
+    },
+    "model": "nvidia/stepfun-ai/step-3.7-flash",
+    "small_model": "nuer/sensenova-6.7-flash-lite",
+    "default_agent": "OpenAgent",
+    "provider": {
+        "nvidia": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "NVIDIA",
+            "options": {
+                "baseURL": "{env:NVIDIA_BASE_URL}/v1",
+                "apiKey": "{env:NVIDIA_API_KEY}"
+            }
+        },
+        "nuer": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "nuer",
+            "options": {
+                "baseURL": "{env:CAPI_BASE_URL}/v1",
+                "apiKey": "{env:CAPI_API_KEY}"
+            },
+            "models": {
+                "sensenova-6.7-flash-lite": {
+                    "name": "sensenova-6.7-flash-lite"
+                },
+                "kimi-k2.5": {
+                    "name": "kimi-k2.5"
+                },
+                "glm-5": {
+                    "name": "glm-5"
+                },
+                "minimax-m2.5": {
+                    "name": "minimax-m2.5"
+                },
+                "deepseek-v3.2": {
+                    "name": "deepseek-v3.2"
+                },
+                "deepseek-v3.2-reasoner": {
+                    "name": "deepseek-v3.2-reasoner"
+                },
+                "qwen3.5-397b-a17b": {
+                    "name": "qwen3.5-397b-a17b"
+                },
+                "qwen3.5-plus": {
+                    "name": "coder-model"
+                },
+                "qwen3-vl-plus": {
+                    "name": "vision-model"
+                },
+                "qwen3-max-preview": {
+                    "name": "qwen3-max-preview"
+                },
+                "gemini-3-pro-preview": {
+                    "name": "gemini-3-pro-preview"
+                },
+                "gemini-3-flash-preview": {
+                    "name": "gemini-3-flash-preview"
+                },
+                "claude-opus-4-6-thinking": {
+                    "name": "claude-opus-4-6-thinking"
+                },
+                "claude-sonnet-4-6": {
+                    "name": "claude-sonnet-4-6"
+                },
+            }
+        },
+    },
+    "plugin": [
+        "opencode-helicone-session",
+        "opencode-devcontainers",
+        "opencode-vibeguard",
+        "opencode-morph-plugin",
+        "oh-my-opencode",
+        "opencode-zellij-namer",
+        "opencode-skillful",
+        // "micode",
+        "octto",
+        "opencode-worktree",
+        "opencode-workspace",
+        "@openspoon/subtask2",
+        "opencode-scheduler",
+        "opencode-background-agents",
+        
+        "superpowers@git+https://github.com/obra/superpowers.git",
+    ]
+}

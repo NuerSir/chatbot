@@ -1,0 +1,165 @@
+# ============================================================
+# CNB 云原生开发环境配置
+# ============================================================
+# 启动时使用 4 核 CPU，内置 Python 3.12 + Node.js 22 双运行时
+# 并自动安装项目依赖（Python uv/pip + Node.js npm）
+# ============================================================
+
+# ============================================================
+# vscode 事件：仓库页面点击「云原生开发」按钮时触发
+# ============================================================
+$:
+  vscode:
+    - runner:
+        # CPU 核数（内存 = cpus × 2 GiB）
+        cpus: 4
+      docker:
+        # 使用预装 Python 3.12 + Node.js 22 的公共镜像
+        # 无需手动编写 Dockerfile
+        image: docker.cnb.cool/aioful/dev-hub/dockerfile-caches:d7fbddc58db3680ae00b1b1130c7df6f032ebe36
+      imports:
+        - https://cnb.cool/${CNB_GROUP_SLUG}/envs/-/blob/main/openai-compatible.yml
+        - https://cnb.cool/${CNB_GROUP_SLUG}/envs/-/blob/main/mcphub.yml
+      services:
+        # vscode: 提供 WebIDE / VSCode / Cursor 等客户端接入
+        - vscode
+        # docker: 开启 Docker in Docker，支持容器内构建镜像
+        - docker
+      # ============================================================
+      # 开发环境启动后自动执行的任务
+      # ============================================================
+      stages:
+        - name: 初始化开发环境
+          script: |
+            echo "=============================================="
+            echo "  正在初始化云原生开发环境..."
+            echo "=============================================="
+
+            # ---- 1. 安装 / 更新 Python 依赖 ----
+            echo ""
+            echo "[1/5] 配置 Python 依赖..."
+
+            # 确保 uv 可用（镜像中已预装，仅兜底时安装）
+            uv --version >/dev/null 2>&1 || pip install uv --break-system-packages -q
+
+            if [ -f "uv.lock" ]; then
+              echo "→ 使用 uv sync 安装（基于 uv.lock）"
+              uv sync --frozen 2>/dev/null || \
+                uv sync 2>/dev/null || \
+                echo "  ⚠ uv sync 跳过"
+            elif [ -f "pyproject.toml" ]; then
+              echo "→ 使用 pip install -e ."
+              pip install -e . --break-system-packages 2>/dev/null || \
+                echo "  ⚠ pip install 跳过"
+            fi
+
+            # ---- 2. 安装 Node.js 依赖 ----
+            echo ""
+            echo "[2/5] 配置 Node.js 依赖..."
+
+            if [ -f "package.json" ]; then
+              echo "→ 执行 npm install"
+              npm install 2>/dev/null || echo "  ⚠ npm install 跳过"
+            else
+              echo "  - 未发现 package.json，跳过"
+            fi
+
+            # ---- 3. 更新开发工具 ----
+            echo ""
+            echo "[3/5] 更新开发工具..."
+            npm update -g opencode-ai @tencent-ai/codebuddy-code 2>/dev/null || \
+              npm install -g opencode-ai @tencent-ai/codebuddy-code 2>/dev/null || \
+              echo "  ⚠ 开发工具安装/更新跳过"
+
+            # ---- 4. 初始化 codegraph ----
+            echo ""
+            echo "[4/5] 初始化 codegraph..."
+            npm install -g @colbymchenry/codegraph 2>/dev/null
+            codegraph init 2>/dev/null && echo "→ codegraph init 完成" || echo "  ⚠ codegraph init 跳过"
+            codegraph index 2>/dev/null && echo "→ codegraph index 完成" || echo "  ⚠ codegraph index 跳过"
+
+            # ---- 5. 信息汇总 ----
+            echo ""
+            echo "[5/5] 环境信息："
+            echo "  Python : $(python --version 2>&1)"
+            echo "  pip    : $(pip --version 2>&1 | awk '{print $2}')"
+            echo "  uv     : $(uv --version 2>&1 || echo '未安装')"
+            echo "  Node.js: $(node --version 2>&1)"
+            echo "  npm    : $(npm --version 2>&1)"
+            echo ""
+
+            echo "=============================================="
+            echo "  开发环境已就绪，祝编码愉快！"
+            echo "=============================================="
+
+  # ============================================================
+  # web_trigger 事件：从上游 GitHub 同步代码的自定义按钮
+  # 对应 .cnb/web_trigger.yml 中的按钮配置
+  # ============================================================
+  web_trigger_sync_upstream:
+    - runner:
+        # 同步操作较轻量，2 核足够
+        cpus: 2
+      docker:
+        image: docker.cnb.cool/aioful/dev-hub/dockerfile-caches:d7fbddc58db3680ae00b1b1130c7df6f032ebe36
+      env:
+        # 上游仓库地址（如需修改可直接编辑此文件）
+        UPSTREAM_REPO: https://github.com/vercel/chatbot.git
+        # 上游要同步的分支
+        UPSTREAM_BRANCH: main
+      stages:
+        - name: 同步上游代码
+          script: |
+            echo "=============================================="
+            echo "  正在从上游仓库同步代码..."
+            echo "=============================================="
+            echo ""
+            echo "上游仓库: ${UPSTREAM_REPO}"
+            echo "上游分支: ${UPSTREAM_BRANCH}"
+            echo "当前分支: ${CNB_BRANCH}"
+            echo ""
+
+            # 安装 git-lfs（仓库使用了 LFS 跟踪部分资源文件）
+            apt-get update -qq && apt-get install -y -qq git-lfs >/dev/null 2>&1 && \
+              git lfs install && echo "✓ 已安装 git-lfs" || \
+              echo "⚠ git-lfs 安装失败，尝试跳过 LFS 钩子"
+
+            # 配置 git 用户信息（合并提交需要）
+            git config user.email "cnb-sync@cnb.cool"
+            git config user.name "CNB Sync Bot"
+
+            # 添加上游远程仓库
+            git remote add upstream ${UPSTREAM_REPO} 2>/dev/null && \
+              echo "✓ 已添加上游仓库" || \
+              (git remote set-url upstream ${UPSTREAM_REPO} && \
+               echo "✓ 已更新上游仓库地址")
+
+            # 获取上游代码
+            echo ""
+            echo "→ 正在获取上游 ${UPSTREAM_BRANCH} 分支..."
+            git fetch upstream ${UPSTREAM_BRANCH}
+
+            # 合并上游代码
+            echo ""
+            echo "→ 正在合并到当前分支..."
+            if git merge upstream/${UPSTREAM_BRANCH} --no-edit; then
+              echo ""
+              echo "✓ 合并成功！"
+
+              # 推送到 CNB 远程仓库
+              echo "→ 正在推送到 origin/${CNB_BRANCH} ..."
+              git push origin HEAD:${CNB_BRANCH}
+
+              echo ""
+              echo "=============================================="
+              echo "  同步完成！上游代码已合并到当前分支"
+              echo "=============================================="
+            else
+              echo ""
+              echo "⚠ 合并冲突，请手动解决："
+              echo "   1. 本地拉取当前分支"
+              echo "   2. 解决冲突并提交"
+              echo "   冲突文件:"
+              git diff --name-only --diff-filter=U
+              exit 1
+            fi
