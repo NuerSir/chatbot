@@ -32,7 +32,7 @@ main:
 
             # 推送到 GitHub
             echo "→ 正在推送到 github/main ..."
-            git push github HEAD:refs/heads/main --force-with-lease
+            git push github HEAD:refs/heads/main --force
 
             echo ""
             echo "=============================================="
