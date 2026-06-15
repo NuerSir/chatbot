@@ -30,6 +30,10 @@ export default async function middleware(request: NextRequest) {
   const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   if (!token) {
+    // Allow access to login and register pages without authentication
+    if (["/login", "/register"].includes(pathname)) {
+      return NextResponse.next();
+    }
     const redirectUrl = encodeURIComponent(new URL(request.url).pathname);
     return NextResponse.redirect(
       new URL(
