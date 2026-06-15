@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
     const chatModel = allowedModelIds.has(selectedChatModel)
       ? selectedChatModel
-      : DEFAULT_CHAT_MODEL;
+      : selectedChatModel || DEFAULT_CHAT_MODEL;
 
     await checkIpRateLimit(ipAddress(request));
 
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
 
     const modelConfig = chatModels.find((m) => m.id === chatModel);
     const modelCapabilities = await getCapabilities();
-    const capabilities = modelCapabilities[chatModel];
+    const capabilities = modelCapabilities[chatModel] ?? { tools: true, vision: false, reasoning: false };
     const isReasoningModel = capabilities?.reasoning === true;
     const supportsTools = capabilities?.tools === true;
 

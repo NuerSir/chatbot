@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL = "moonshotai/kimi-k2.5";
+export const DEFAULT_CHAT_MODEL = process.env.DEFAULT_CHAT_MODEL || "moonshotai/kimi-k2.5";
 
 export const titleModel = {
   id: "moonshotai/kimi-k2.5",
@@ -118,6 +118,33 @@ type GatewayModel = {
 export type GatewayModelWithCapabilities = ChatModel & {
   capabilities: ModelCapabilities;
 };
+
+export async function getOpenAIModels(): Promise<GatewayModelWithCapabilities[]> {
+  try {
+    const baseURL = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+    const res = await fetch(`${baseURL}/models`, {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) {
+      return [];
+    }
+    const json = await res.json();
+    return (json.data ?? []).map(
+      (m: { id: string; owned_by?: string }) => ({
+        id: m.id,
+        name: m.id,
+        provider: m.owned_by || m.id.split("/")[0] || "unknown",
+        description: "",
+        capabilities: { tools: true, vision: false, reasoning: false },
+      })
+    );
+  } catch {
+    return [];
+  }
+}
 
 export async function getAllGatewayModels(): Promise<
   GatewayModelWithCapabilities[]
