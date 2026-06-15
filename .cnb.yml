@@ -11,7 +11,8 @@ main:
       runner:
         cpus: 2
       docker:
-        image: docker.cnb.cool/aioful/dev-hub/dockerfile-caches:d7fbddc58db3680ae00b1b1130c7df6f032ebe36
+        # 仅需 git 命令，使用轻量级 alpine/git 镜像
+        image: alpine/git:latest
       imports:
         - https://cnb.cool/${CNB_GROUP_SLUG}/envs/-/blob/main/env.yml
       stages:
