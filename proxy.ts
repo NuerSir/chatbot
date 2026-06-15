@@ -9,6 +9,14 @@ export async function proxy(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
+  if (pathname.startsWith("/api/auth/guest")) {
+    const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+    const redirectUrl = encodeURIComponent(request.nextUrl.pathname);
+    return NextResponse.redirect(
+      new URL(`${base}/login?callbackUrl=${redirectUrl}`, request.url)
+    );
+  }
+
   if (pathname.startsWith("/api/auth")) {
     return NextResponse.next();
   }
@@ -23,9 +31,11 @@ export async function proxy(request: NextRequest) {
 
   if (!token) {
     const redirectUrl = encodeURIComponent(new URL(request.url).pathname);
-
     return NextResponse.redirect(
-      new URL(`${base}/api/auth/guest?redirectUrl=${redirectUrl}`, request.url)
+      new URL(
+        `${base}/login?callbackUrl=${redirectUrl}`,
+        request.url
+      )
     );
   }
 
