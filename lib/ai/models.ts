@@ -133,13 +133,18 @@ export async function getOpenAIModels(): Promise<GatewayModelWithCapabilities[]>
     }
     const json = await res.json();
     return (json.data ?? []).map(
-      (m: { id: string; owned_by?: string }) => ({
+      (m: {
+        id: string;
+        owned_by?: string;
+        capabilities?: ModelCapabilities;
+      }) => ({
         id: m.id,
         name: m.id,
         provider: m.owned_by || m.id.split("/")[0] || "unknown",
         description: "",
-        capabilities: { tools: true, vision: false, reasoning: false },
-      })
+        capabilities:
+          m.capabilities ?? { tools: true, vision: false, reasoning: false },
+      }),
     );
   } catch {
     return [];

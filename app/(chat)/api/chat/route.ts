@@ -14,9 +14,7 @@ import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import {
   allowedModelIds,
-  chatModels,
-  DEFAULT_CHAT_MODEL,
-  getCapabilities,
+  getOpenAIModels,
 } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
@@ -71,18 +69,24 @@ export async function POST(request: Request) {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
-    const [, session] = await Promise.all([
-      checkBotId().catch(() => null),
-      auth(),
-    ]);
+  const [dynamicModels, , session] = await Promise.all([
+    getOpenAIModels(),
+    checkBotId().catch(() => null),
+    auth(),
+  ]);
 
-    if (!session?.user) {
-      return new ChatbotError("unauthorized:chat").toResponse();
-    }
+  if (!session?.user) {
+    return new ChatbotError("unauthorized:chat").toResponse();
+  }
 
-    const chatModel = allowedModelIds.has(selectedChatModel)
-      ? selectedChatModel
-      : selectedChatModel || DEFAULT_CHAT_MODEL;
+  const allAllowedIds = new Set([
+    ...allowedModelIds,
+    ...dynamicModels.map((m) => m.id),
+  ]);
+
+  const chatModel = allAllowedIds.has(selectedChatModel)
+    ? selectedChatModel
+    : selectedChatModel || DEFAULT_CHAT_MODEL;
 
     await checkIpRateLimit(ipAddress(request));
 
