@@ -14,6 +14,7 @@ import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import {
   allowedModelIds,
+  chatModels,
   DEFAULT_CHAT_MODEL,
   getOpenAIModels,
 } from "@/lib/ai/models";
