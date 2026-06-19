@@ -172,16 +172,23 @@ export const ModelSelectorLogo = ({
   provider,
   className,
   ...props
-}: ModelSelectorLogoProps) => (
-  <img
-    {...props}
-    alt={`${provider} logo`}
-    className={cn("size-4 dark:invert", className)}
-    height={16}
-    src={`https://models.dev/logos/${provider}.svg`}
-    width={16}
-  />
-);
+}: ModelSelectorLogoProps) => {
+  const initial = provider.charAt(0).toUpperCase();
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex size-4 shrink-0 items-center justify-center rounded-[3px] bg-muted-foreground/25 text-[9px] font-medium text-foreground",
+        className,
+      )}
+      title={`${provider} logo`}
+      {...props}
+    >
+      {initial}
+    </span>
+  );
+};
 
 export type ModelSelectorLogoGroupProps = ComponentProps<"div">;
 

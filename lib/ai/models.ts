@@ -29,21 +29,18 @@ export const chatModels: ChatModel[] = [
     name: "DeepSeek V3.2",
     provider: "deepseek",
     description: "Fast and capable model with tool use",
-    gatewayOrder: ["bedrock", "deepinfra"],
   },
   {
     id: "moonshotai/kimi-k2.5",
     name: "Kimi K2.5",
     provider: "moonshotai",
     description: "Moonshot AI flagship model",
-    gatewayOrder: ["fireworks", "bedrock"],
   },
   {
     id: "openai/gpt-oss-20b",
     name: "GPT OSS 20B",
     provider: "openai",
     description: "Compact reasoning model",
-    gatewayOrder: ["groq", "bedrock"],
     reasoningEffort: "low",
   },
   {
@@ -51,7 +48,6 @@ export const chatModels: ChatModel[] = [
     name: "GPT OSS 120B",
     provider: "openai",
     description: "Open-source 120B parameter model",
-    gatewayOrder: ["fireworks", "bedrock"],
     reasoningEffort: "low",
   },
   {
@@ -59,51 +55,13 @@ export const chatModels: ChatModel[] = [
     name: "Grok 4.1 Fast",
     provider: "xai",
     description: "Fast non-reasoning model with tool use",
-    gatewayOrder: ["xai"],
   },
 ];
 
 export async function getCapabilities(): Promise<
-  Record<string, ModelCapabilities>
+Record<string, ModelCapabilities>
 > {
-  const results = await Promise.all(
-    chatModels.map(async (model) => {
-      try {
-        const res = await fetch(
-          `https://ai-gateway.vercel.sh/v1/models/${model.id}/endpoints`,
-          { next: { revalidate: 86_400 } }
-        );
-        if (!res.ok) {
-          return [model.id, { tools: false, vision: false, reasoning: false }];
-        }
-
-        const json = await res.json();
-        const endpoints = json.data?.endpoints ?? [];
-        const params = new Set(
-          endpoints.flatMap(
-            (e: { supported_parameters?: string[] }) =>
-              e.supported_parameters ?? []
-          )
-        );
-        const inputModalities = new Set(
-          json.data?.architecture?.input_modalities ?? []
-        );
-
-        return [
-          model.id,
-          {
-            tools: params.has("tools"),
-            vision: inputModalities.has("image"),
-            reasoning: params.has("reasoning"),
-          },
-        ];
-      } catch {
-        return [model.id, { tools: false, vision: false, reasoning: false }];
-      }
-    })
-  );
-
-  return Object.fromEntries(results);
+  return {};
 }
 
 export const isDemo = process.env.IS_DEMO === "1";

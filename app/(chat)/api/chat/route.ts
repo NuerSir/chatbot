@@ -14,6 +14,7 @@ import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import {
   allowedModelIds,
+  DEFAULT_CHAT_MODEL,
   getOpenAIModels,
 } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
 
   const chatModel = allAllowedIds.has(selectedChatModel)
     ? selectedChatModel
-    : selectedChatModel || DEFAULT_CHAT_MODEL;
+    : DEFAULT_CHAT_MODEL;
 
     await checkIpRateLimit(ipAddress(request));
 
@@ -184,11 +185,19 @@ export async function POST(request: Request) {
       });
     }
 
-    const modelConfig = chatModels.find((m) => m.id === chatModel);
-    const modelCapabilities = await getCapabilities();
-    const capabilities = modelCapabilities[chatModel] ?? { tools: true, vision: false, reasoning: false };
-    const isReasoningModel = capabilities?.reasoning === true;
-    const supportsTools = capabilities?.tools === true;
+const modelConfig = chatModels.find((m) => m.id === chatModel);
+const dynamicCapabilities = dynamicModels.reduce(
+  (acc, m) => {
+    if (m.capabilities) {
+      acc[m.id] = m.capabilities;
+    }
+    return acc;
+  },
+  {} as Record<string, { tools: boolean; vision: boolean; reasoning: boolean }>,
+);
+const capabilities = dynamicCapabilities[chatModel] ?? { tools: true, vision: false, reasoning: false };
+const isReasoningModel = capabilities?.reasoning === true || modelConfig?.reasoningEffort !== undefined;
+const supportsTools = capabilities?.tools === true;
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
@@ -210,14 +219,11 @@ export async function POST(request: Request) {
                   "updateDocument",
                   "requestSuggestions",
                 ],
-          providerOptions: {
-            ...(modelConfig?.gatewayOrder && {
-              gateway: { order: modelConfig.gatewayOrder },
-            }),
-            ...(modelConfig?.reasoningEffort && {
-              openai: { reasoningEffort: modelConfig.reasoningEffort },
-            }),
-          },
+  providerOptions: {
+    ...(modelConfig?.reasoningEffort && {
+      openai: { reasoningEffort: modelConfig.reasoningEffort },
+    }),
+  },
           tools: {
             getWeather,
             createDocument: createDocument({
