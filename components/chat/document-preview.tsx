@@ -22,6 +22,7 @@ import {
   FullscreenIcon,
   ImageIcon,
   LoaderIcon,
+  WarningIcon,
 } from "./icons";
 import { ImageEditor } from "./image-editor";
 import { SpreadsheetEditor } from "./sheet-editor";
@@ -128,6 +129,12 @@ export function DocumentPreview({
         kind={document.kind}
         title={document.title}
       />
+      {artifact.interrupted && (
+        <div className="flex items-center gap-1.5 border-x border-amber-200 bg-amber-50 px-4 py-1.5 text-xs text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+          <WarningIcon size={12} />
+          Connection lost — content may be incomplete
+        </div>
+      )}
       <DocumentContent document={document} />
     </div>
   );

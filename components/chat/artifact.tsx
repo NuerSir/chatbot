@@ -24,7 +24,7 @@ import { fetcher } from "@/lib/utils";
 import { useSidebar } from "../ui/sidebar";
 import { ArtifactActions } from "./artifact-actions";
 import { ArtifactCloseButton } from "./artifact-close-button";
-import { LoaderIcon } from "./icons";
+import { LoaderIcon, WarningIcon } from "./icons";
 import { Toolbar } from "./toolbar";
 import { VersionFooter } from "./version-footer";
 import type { VisibilityType } from "./visibility-selector";
@@ -44,6 +44,7 @@ export type UIArtifact = {
   content: string;
   isVisible: boolean;
   status: "streaming" | "idle";
+  interrupted: boolean;
   boundingBox: {
     top: number;
     left: number;
@@ -123,6 +124,28 @@ function PureArtifact({
     }
     el.scrollTo({ top: el.scrollHeight });
   }, [artifact.status]);
+
+  // Client-side fallback: when the chat stream ends (ready/error) but
+  // artifact is still "streaming" (data-finish was never received, e.g.
+  // due to Vercel timeout, network drop, or server crash), force-release
+  // the artifact to idle and mark it as interrupted.
+  useEffect(() => {
+    if (
+      (status === "ready" || status === "error") &&
+      artifact.status === "streaming"
+    ) {
+      const timer = setTimeout(() => {
+        setArtifact((prev) => {
+          if (prev.status === "streaming") {
+            return { ...prev, status: "idle", interrupted: true };
+          }
+          return prev;
+        });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status, artifact.status, setArtifact]);
 
   useEffect(() => {
     if (documents && documents.length > 0) {
@@ -331,6 +354,11 @@ function PureArtifact({
                       <LoaderIcon size={12} />
                     </div>
                     Generating...
+                  </div>
+                ) : artifact.interrupted ? (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
+                    <WarningIcon size={12} />
+                    Connection lost — content may be incomplete
                   </div>
                 ) : (
                   <div className="h-3 w-24 animate-pulse rounded bg-muted-foreground/10" />

@@ -60,10 +60,25 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <link
+          href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/manifest.webmanifest`}
+          rel="manifest"
+        />
+        <link
+          href={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icons/icon-192x192.png`}
+          rel="apple-touch-icon"
+        />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required"
           dangerouslySetInnerHTML={{
             __html: THEME_COLOR_SCRIPT,
+          }}
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required"
+          dangerouslySetInnerHTML={{
+            __html: `\
+(function(){'serviceWorker'in navigator&&navigator.serviceWorker.register('${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/sw.js').catch(function(){})})();`,
           }}
         />
       </head>

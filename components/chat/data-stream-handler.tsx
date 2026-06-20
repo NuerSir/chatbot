@@ -78,6 +78,7 @@ export function DataStreamHandler() {
             return {
               ...draftArtifact,
               status: "idle",
+              interrupted: false,
             };
 
           default:

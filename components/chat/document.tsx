@@ -62,6 +62,7 @@ function PureDocumentToolResult({
           title: result.title,
           isVisible: true,
           status: "idle",
+          interrupted: false,
           boundingBox,
         }));
       }}

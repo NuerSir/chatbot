@@ -51,41 +51,47 @@ export const editDocument = ({ session, dataStream }: EditDocumentProps) =>
         ? document.content.replaceAll(old_string, new_string)
         : document.content.replace(old_string, new_string);
 
-      await saveDocument({
-        id: document.id,
-        title: document.title,
-        kind: document.kind,
-        content: updated,
-        userId: document.userId,
-      });
+      try {
+        await saveDocument({
+          id: document.id,
+          title: document.title,
+          kind: document.kind,
+          content: updated,
+          userId: document.userId,
+        });
 
-      dataStream.write({
-        type: "data-clear",
-        data: null,
-        transient: true,
-      });
-
-      if (document.kind === "code") {
         dataStream.write({
-          type: "data-codeDelta",
-          data: updated,
+          type: "data-clear",
+          data: null,
           transient: true,
         });
-      } else if (document.kind === "sheet") {
+
+        if (document.kind === "code") {
+          dataStream.write({
+            type: "data-codeDelta",
+            data: updated,
+            transient: true,
+          });
+        } else if (document.kind === "sheet") {
+          dataStream.write({
+            type: "data-sheetDelta",
+            data: updated,
+            transient: true,
+          });
+        } else {
+          dataStream.write({
+            type: "data-textDelta",
+            data: updated,
+            transient: true,
+          });
+        }
+      } finally {
         dataStream.write({
-          type: "data-sheetDelta",
-          data: updated,
-          transient: true,
-        });
-      } else {
-        dataStream.write({
-          type: "data-textDelta",
-          data: updated,
+          type: "data-finish",
+          data: null,
           transient: true,
         });
       }
-
-      dataStream.write({ type: "data-finish", data: null, transient: true });
 
       return {
         id,

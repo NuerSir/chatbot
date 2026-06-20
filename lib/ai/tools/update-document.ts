@@ -54,15 +54,21 @@ export const updateDocument = ({
         throw new Error(`No document handler found for kind: ${document.kind}`);
       }
 
-      await documentHandler.onUpdateDocument({
-        document,
-        description,
-        dataStream,
-        session,
-        modelId,
-      });
-
-      dataStream.write({ type: "data-finish", data: null, transient: true });
+      try {
+        await documentHandler.onUpdateDocument({
+          document,
+          description,
+          dataStream,
+          session,
+          modelId,
+        });
+      } finally {
+        dataStream.write({
+          type: "data-finish",
+          data: null,
+          transient: true,
+        });
+      }
 
       return {
         id,

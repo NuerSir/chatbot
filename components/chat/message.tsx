@@ -1,4 +1,5 @@
 "use client";
+import { useRef } from "react";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
@@ -53,6 +54,8 @@ const PurePreviewMessage = ({
   );
 
   useDataStream();
+
+  const messageRef = useRef<HTMLDivElement>(null);
 
   const isUser = message.role === "user";
   const isAssistant = message.role === "assistant";
@@ -338,12 +341,21 @@ const PurePreviewMessage = ({
 
   return (
     <div
+      ref={messageRef}
       className={cn(
-        "group/message w-full",
+        "group/message w-full outline-none",
         !isAssistant && "animate-[fade-up_0.25s_cubic-bezier(0.22,1,0.36,1)]"
       )}
       data-role={message.role}
       data-testid={`message-${message.role}`}
+      tabIndex={-1}
+      onPointerDown={(e) => {
+        // On touch devices only, focus the message wrapper so that
+        // group-focus-within makes action buttons visible
+        if (e.pointerType !== "mouse") {
+          messageRef.current?.focus();
+        }
+      }}
     >
       <div
         className={cn(
