@@ -4,10 +4,10 @@ import { RotateCcw } from "lucide-react";
 import { memo } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
-import { useCopyToClipboard } from "usehooks-ts";
 import { deleteTrailingMessages } from "@/app/(chat)/actions";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
+import { copyToClipboard } from "@/lib/utils";
 import {
   MessageAction as Action,
   MessageActions as Actions,
@@ -34,7 +34,6 @@ export function PureMessageActions({
   stop?: UseChatHelpers<ChatMessage>["stop"];
 }) {
   const { mutate } = useSWRConfig();
-  const [_, copyToClipboard] = useCopyToClipboard();
 
   if (isLoading) {
     return null;
@@ -52,8 +51,8 @@ export function PureMessageActions({
       return;
     }
 
-    const copied = await copyToClipboard(textFromParts);
-    if (copied) {
+    const success = await copyToClipboard(textFromParts);
+    if (success) {
       toast.success("Copied to clipboard!");
     } else {
       toast.error("Failed to copy to clipboard");
