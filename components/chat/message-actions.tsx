@@ -1,4 +1,6 @@
+import type { UseChatHelpers } from "@ai-sdk/react";
 import equal from "fast-deep-equal";
+import { RotateCcw } from "lucide-react";
 import { memo } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
@@ -9,6 +11,7 @@ import {
   MessageAction as Action,
   MessageActions as Actions,
 } from "../ai-elements/message";
+import { deleteTrailingMessages } from "@/app/(chat)/actions";
 import { CopyIcon, PencilEditIcon, ThumbDownIcon, ThumbUpIcon } from "./icons";
 
 export function PureMessageActions({
@@ -16,13 +19,19 @@ export function PureMessageActions({
   message,
   vote,
   isLoading,
+  isLast,
   onEdit,
+  regenerate,
+  stop,
 }: {
   chatId: string;
   message: ChatMessage;
   vote: Vote | undefined;
   isLoading: boolean;
+  isLast: boolean;
   onEdit?: () => void;
+  regenerate?: UseChatHelpers<ChatMessage>["regenerate"];
+  stop?: UseChatHelpers<ChatMessage>["stop"];
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -45,6 +54,16 @@ export function PureMessageActions({
 
     await copyToClipboard(textFromParts);
     toast.success("Copied to clipboard!");
+  };
+
+  const handleRegenerate = async () => {
+    stop?.();
+    try {
+      await deleteTrailingMessages({ id: message.id });
+    } catch {
+      // DB cleanup is non-critical; proceed with regenerate
+    }
+    regenerate?.({ messageId: message.id });
   };
 
   if (message.role === "user") {
@@ -82,6 +101,16 @@ export function PureMessageActions({
       >
         <CopyIcon />
       </Action>
+
+      {regenerate && isLast && (
+        <Action
+          className="text-muted-foreground/50 hover:text-foreground"
+          onClick={handleRegenerate}
+          tooltip="Regenerate"
+        >
+          <RotateCcw className="size-4" />
+        </Action>
+      )}
 
       <Action
         className="text-muted-foreground/50 hover:text-foreground"
@@ -199,6 +228,9 @@ export const MessageActions = memo(
       return false;
     }
     if (prevProps.isLoading !== nextProps.isLoading) {
+      return false;
+    }
+    if (prevProps.isLast !== nextProps.isLast) {
       return false;
     }
 

@@ -104,10 +104,25 @@ export function ChatShell() {
               selectedModelId={currentModelId}
               setMessages={setMessages}
               status={status}
+              stop={stop}
               votes={votes}
             />
 
-            <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+            <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl flex-col gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+              {status === "error" && (
+                <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-950/30">
+                  <span className="text-sm text-red-600 dark:text-red-400">
+                    Something went wrong. Please try again.
+                  </span>
+                  <button
+                    className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-700"
+                    onClick={() => regenerate()}
+                    type="button"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
               {!isReadonly && (
                 <MultimodalInput
                   attachments={attachments}
@@ -126,6 +141,7 @@ export function ChatShell() {
                   sendMessage={
                     editingMessage
                       ? async () => {
+                          stop();
                           const msg = editingMessage;
                           setEditingMessage(null);
                           await submitEditedMessage({

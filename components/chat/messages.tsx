@@ -17,6 +17,7 @@ type MessagesProps = {
   messages: ChatMessage[];
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
   regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+  stop: UseChatHelpers<ChatMessage>["stop"];
   isReadonly: boolean;
   isArtifactVisible: boolean;
   isLoading?: boolean;
@@ -32,6 +33,7 @@ function PureMessages({
   messages,
   setMessages,
   regenerate,
+  stop,
   isReadonly,
   isArtifactVisible,
   isLoading,
@@ -82,6 +84,7 @@ function PureMessages({
               isLoading={
                 status === "streaming" && messages.length - 1 === index
               }
+              isLast={index === messages.length - 1}
               isReadonly={isReadonly}
               key={message.id}
               message={message}
@@ -91,6 +94,7 @@ function PureMessages({
                 hasSentMessage && index === messages.length - 1
               }
               setMessages={setMessages}
+              stop={stop}
               vote={
                 votes
                   ? votes.find((vote) => vote.messageId === message.id)

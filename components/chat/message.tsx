@@ -27,8 +27,10 @@ const PurePreviewMessage = ({
   message,
   vote,
   isLoading,
+  isLast,
   setMessages: _setMessages,
   regenerate: _regenerate,
+  stop: _stop,
   isReadonly,
   requiresScrollPadding: _requiresScrollPadding,
   onEdit,
@@ -38,8 +40,10 @@ const PurePreviewMessage = ({
   message: ChatMessage;
   vote: Vote | undefined;
   isLoading: boolean;
+  isLast: boolean;
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
   regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+  stop: UseChatHelpers<ChatMessage>["stop"];
   isReadonly: boolean;
   requiresScrollPadding: boolean;
   onEdit?: (message: ChatMessage) => void;
@@ -307,10 +311,13 @@ const PurePreviewMessage = ({
   const actions = !isReadonly && (
     <MessageActions
       chatId={chatId}
+      isLast={isLast}
       isLoading={isLoading}
       key={`action-${message.id}`}
       message={message}
       onEdit={onEdit ? () => onEdit(message) : undefined}
+      regenerate={_regenerate}
+      stop={_stop}
       vote={vote}
     />
   );
