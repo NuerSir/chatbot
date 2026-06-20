@@ -220,12 +220,13 @@ const supportsTools = capabilities?.tools === true;
                   "updateDocument",
                   "requestSuggestions",
                 ],
+  abortSignal: request.signal,
   providerOptions: {
     ...(modelConfig?.reasoningEffort && {
       openai: { reasoningEffort: modelConfig.reasoningEffort },
     }),
   },
-          tools: {
+  tools: {
             getWeather,
             createDocument: createDocument({
               session,
