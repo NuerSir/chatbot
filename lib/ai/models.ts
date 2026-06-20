@@ -101,7 +101,7 @@ export async function getOpenAIModels(): Promise<GatewayModelWithCapabilities[]>
         provider: m.owned_by || m.id.split("/")[0] || "unknown",
         description: "",
         capabilities:
-          m.capabilities ?? { tools: true, vision: false, reasoning: false },
+          m.capabilities ?? { tools: true, vision: false, reasoning: true },
       }),
     );
   } catch {
