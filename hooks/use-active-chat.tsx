@@ -34,6 +34,7 @@ type ActiveChatContextValue = {
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
   sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
   status: UseChatHelpers<ChatMessage>["status"];
+  error: UseChatHelpers<ChatMessage>["error"];
   stop: UseChatHelpers<ChatMessage>["stop"];
   regenerate: UseChatHelpers<ChatMessage>["regenerate"];
   addToolApprovalResponse: UseChatHelpers<ChatMessage>["addToolApprovalResponse"];
@@ -102,6 +103,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
     setMessages,
     sendMessage,
     status,
+    error,
     stop,
     regenerate,
     resumeStream,
@@ -251,6 +253,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
       setMessages,
       sendMessage,
       status,
+      error,
       stop,
       regenerate,
       addToolApprovalResponse,
@@ -271,6 +274,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
       setMessages,
       sendMessage,
       status,
+      error,
       stop,
       regenerate,
       addToolApprovalResponse,

@@ -5,13 +5,13 @@ import { memo } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { useCopyToClipboard } from "usehooks-ts";
+import { deleteTrailingMessages } from "@/app/(chat)/actions";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import {
   MessageAction as Action,
   MessageActions as Actions,
 } from "../ai-elements/message";
-import { deleteTrailingMessages } from "@/app/(chat)/actions";
 import { CopyIcon, PencilEditIcon, ThumbDownIcon, ThumbUpIcon } from "./icons";
 
 export function PureMessageActions({
@@ -60,14 +60,12 @@ export function PureMessageActions({
     }
   };
 
-  const handleRegenerate = async () => {
+  const handleRegenerate = () => {
     stop?.();
-    try {
-      await deleteTrailingMessages({ id: message.id });
-    } catch {
-      // DB cleanup is non-critical; proceed with regenerate
-    }
     regenerate?.({ messageId: message.id });
+    deleteTrailingMessages({ id: message.id }).catch(() => {
+      /* DB cleanup is non-critical */
+    });
   };
 
   if (message.role === "user") {

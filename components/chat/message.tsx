@@ -1,6 +1,7 @@
 "use client";
-import { useRef } from "react";
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { RotateCcw } from "lucide-react";
+import { useRef } from "react";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
@@ -341,14 +342,12 @@ const PurePreviewMessage = ({
 
   return (
     <div
-      ref={messageRef}
       className={cn(
         "group/message w-full outline-none",
         !isAssistant && "animate-[fade-up_0.25s_cubic-bezier(0.22,1,0.36,1)]"
       )}
       data-role={message.role}
       data-testid={`message-${message.role}`}
-      tabIndex={-1}
       onPointerDown={(e) => {
         // On touch devices only, focus the message wrapper so that
         // group-focus-within makes action buttons visible
@@ -356,6 +355,8 @@ const PurePreviewMessage = ({
           messageRef.current?.focus();
         }
       }}
+      ref={messageRef}
+      tabIndex={-1}
     >
       <div
         className={cn(
@@ -399,6 +400,65 @@ export const ThinkingMessage = () => {
           <Shimmer className="font-medium" duration={1}>
             Thinking...
           </Shimmer>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ErrorMessage = ({
+  error,
+  onRetry,
+}: {
+  error?: Error;
+  onRetry?: () => void;
+}) => {
+  return (
+    <div
+      className="group/message w-full"
+      data-role="assistant"
+      data-testid="message-assistant-error"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex shrink-0 items-center pt-1">
+          <div className="flex size-7 items-center justify-center rounded-lg bg-red-100 text-red-500 ring-1 ring-red-200 dark:bg-red-950/50 dark:text-red-400 dark:ring-red-800/50">
+            <svg
+              className="size-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-2">
+            <p className="text-[13px] font-medium text-red-600 dark:text-red-400">
+              Failed to generate response
+            </p>
+            {error?.message && (
+              <p className="text-[12px] leading-relaxed text-red-500/80 dark:text-red-400/70">
+                {error.message}
+              </p>
+            )}
+            {onRetry && (
+              <button
+                className="mt-0.5 flex w-fit items-center gap-1.5 rounded-lg border border-border/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                onClick={onRetry}
+                type="button"
+              >
+                <RotateCcw className="size-3" />
+                Retry
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

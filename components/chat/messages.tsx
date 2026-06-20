@@ -7,12 +7,13 @@ import type { ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDataStream } from "./data-stream-provider";
 import { Greeting } from "./greeting";
-import { PreviewMessage, ThinkingMessage } from "./message";
+import { ErrorMessage, PreviewMessage, ThinkingMessage } from "./message";
 
 type MessagesProps = {
   addToolApprovalResponse: UseChatHelpers<ChatMessage>["addToolApprovalResponse"];
   chatId: string;
   status: UseChatHelpers<ChatMessage>["status"];
+  error: UseChatHelpers<ChatMessage>["error"];
   votes: Vote[] | undefined;
   messages: ChatMessage[];
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
@@ -29,6 +30,7 @@ function PureMessages({
   addToolApprovalResponse,
   chatId,
   status,
+  error,
   votes,
   messages,
   setMessages,
@@ -81,10 +83,10 @@ function PureMessages({
             <PreviewMessage
               addToolApprovalResponse={addToolApprovalResponse}
               chatId={chatId}
+              isLast={index === messages.length - 1}
               isLoading={
                 status === "streaming" && messages.length - 1 === index
               }
-              isLast={index === messages.length - 1}
               isReadonly={isReadonly}
               key={message.id}
               message={message}
@@ -105,6 +107,10 @@ function PureMessages({
 
           {status === "submitted" && messages.at(-1)?.role !== "assistant" && (
             <ThinkingMessage />
+          )}
+
+          {status === "error" && messages.at(-1)?.role !== "assistant" && (
+            <ErrorMessage error={error} onRetry={() => regenerate()} />
           )}
 
           <div
